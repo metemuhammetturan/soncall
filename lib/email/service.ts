@@ -1,9 +1,6 @@
 
 import { Resend } from 'resend';
 
-// Initialize Resend with API Key from env
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 interface SendReportParams {
     to: string[];
     subject: string;
@@ -14,8 +11,26 @@ interface SendReportParams {
     }>;
 }
 
+function getResend() {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+        return null;
+    }
+    return new Resend(apiKey);
+}
+
 export async function sendEmail({ to, subject, html, attachments }: SendReportParams) {
     if (!process.env.RESEND_API_KEY) {
+        console.warn('⚠️ RESEND_API_KEY is missing. Email simulation mode.');
+        console.log('--- EMAIL SIMULATION ---');
+        console.log(`To: ${to.join(', ')}`);
+        console.log(`Subject: ${subject}`);
+        console.log('--- END SIMULATION ---');
+        return { success: true, id: 'simulated_id' };
+    }
+
+    const resend = getResend();
+    if (!resend) {
         console.warn('⚠️ RESEND_API_KEY is missing. Email simulation mode.');
         console.log('--- EMAIL SIMULATION ---');
         console.log(`To: ${to.join(', ')}`);
